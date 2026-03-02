@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KMAT — How It Works</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #eee; line-height: 1.6; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1 { font-size: 2.2em; margin-bottom: 8px; }
+  h1 span { color: #60a5fa; }
+  .subtitle { color: #888; font-size: 1.1em; margin-bottom: 50px; }
+  h2 { font-size: 1.5em; margin: 50px 0 20px; color: #60a5fa; }
+  h3 { font-size: 1.1em; margin: 30px 0 12px; color: #a78bfa; }
+  p, li { color: #bbb; font-size: 0.95em; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 6px; }
+
+  /* Flow diagram */
+  .flow { display: flex; align-items: center; justify-content: center; gap: 0; margin: 30px 0; flex-wrap: wrap; }
+  .flow-item { background: #1a1a2e; border: 2px solid #333; border-radius: 16px; padding: 20px 24px; text-align: center; min-width: 140px; position: relative; }
+  .flow-item .icon { font-size: 2em; margin-bottom: 8px; }
+  .flow-item .label { font-size: 0.85em; font-weight: 600; color: #eee; }
+  .flow-item .desc { font-size: 0.72em; color: #888; margin-top: 4px; }
+  .flow-arrow { font-size: 1.8em; color: #444; padding: 0 6px; flex-shrink: 0; }
+  .flow-item.highlight { border-color: #60a5fa; box-shadow: 0 0 20px rgba(96,165,250,0.15); }
+  .flow-item.green { border-color: #34d399; box-shadow: 0 0 20px rgba(52,211,153,0.15); }
+  .flow-item.yellow { border-color: #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.15); }
+  .flow-item.red { border-color: #f87171; box-shadow: 0 0 20px rgba(248,113,113,0.15); }
+
+  /* Architecture grid */
+  .arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .arch-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; }
+  .arch-card .card-title { font-size: 0.9em; font-weight: 700; color: #eee; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .arch-card .card-title .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .arch-card .card-body { font-size: 0.82em; color: #888; }
+  .arch-card .file { font-family: monospace; font-size: 0.78em; color: #60a5fa; background: #1a1a2e; padding: 2px 6px; border-radius: 4px; }
+
+  /* Page map */
+  .page-map { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+  .page-card { background: #111; border: 1px solid #222; border-radius: 10px; padding: 16px; text-align: center; transition: transform 0.2s; }
+  .page-card:hover { transform: translateY(-2px); border-color: #444; }
+  .page-card .page-icon { font-size: 1.6em; margin-bottom: 6px; }
+  .page-card .page-name { font-size: 0.85em; font-weight: 600; }
+  .page-card .page-path { font-size: 0.7em; color: #666; font-family: monospace; margin-top: 4px; }
+  .page-card .page-desc { font-size: 0.72em; color: #888; margin-top: 6px; }
+
+  /* Data flow */
+  .data-flow { background: #111; border: 1px solid #222; border-radius: 12px; padding: 24px; margin: 20px 0; }
+  .data-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
+  .data-row:last-child { border-bottom: none; }
+  .data-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: 700; flex-shrink: 0; }
+  .data-text { font-size: 0.85em; color: #bbb; }
+  .data-text strong { color: #eee; }
+
+  /* Lessons */
+  .lesson-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .lesson { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; }
+  .lesson .lesson-label { font-size: 0.72em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .lesson .bad { color: #f87171; }
+  .lesson .good { color: #34d399; }
+  .lesson p { font-size: 0.82em; }
+
+  /* Tech stack */
+  .tech-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; }
+  .tech-tag { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 8px 14px; font-size: 0.8em; color: #ccc; }
+  .tech-tag strong { color: #60a5fa; }
+
+  .divider { border: none; border-top: 1px solid #222; margin: 40px 0; }
+
+  @media (max-width: 700px) {
+    .arch-grid, .lesson-grid { grid-template-columns: 1fr; }
+    .page-map { grid-template-columns: repeat(2, 1fr); }
+    .flow { gap: 4px; }
+    .flow-item { min-width: 100px; padding: 14px 10px; }
+    .flow-arrow { font-size: 1.2em; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1><span>KMAT</span> — How It Works</h1>
+  <p class="subtitle">A visual guide to how this Korean Meeting Translator was built, explained simply.</p>
+
+  <!-- ============ BIG PICTURE ============ -->
+  <h2>The Big Picture</h2>
+  <p>KMAT does one thing: <strong>listens to Korean speech and shows the translation in real-time</strong>. Here's the journey of your voice through the app:</p>
+
+  <div class="flow">
+    <div class="flow-item red">
+      <div class="icon">&#127908;</div>
+      <div class="label">Your Voice</div>
+      <div class="desc">Korean speech</div>
+    </div>
+    <div class="flow-arrow">&#8594;</div>
+    <div class="flow-item highlight">
+      <div class="icon">&#129504;</div>
+      <div class="label">Deepgram AI</div>
+      <div class="desc">Converts speech to text</div>
+    </div>
+    <div class="flow-arrow">&#8594;</div>
+    <div class="flow-item yellow">
+      <div class="icon">&#9997;&#65039;</div>
+      <div class="label">Korean Text</div>
+      <div class="desc">What you said, written out</div>
+    </div>
+    <div class="flow-arrow">&#8594;</div>
+    <div class="flow-item green">
+      <div class="icon">&#129302;</div>
+      <div class="label">Claude AI</div>
+      <div class="desc">Translates to Chinese/English</div>
+    </div>
+    <div class="flow-arrow">&#8594;</div>
+    <div class="flow-item highlight">
+      <div class="icon">&#128196;</div>
+      <div class="label">Translation</div>
+      <div class="desc">Shown on screen</div>
+    </div>
+  </div>
+
+  <p>Think of it like a relay race: your voice is the baton, and each station passes it to the next until it becomes a translation on your screen.</p>
+
+  <!-- ============ THREE LAYERS ============ -->
+  <h2>Three Layers of the App</h2>
+  <p>Every web app has three layers, like a sandwich:</p>
+
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="card-title"><div class="dot" style="background:#60a5fa"></div> Frontend (What You See)</div>
+      <div class="card-body">
+        The buttons, text, colors, and layout. Built with <strong>React</strong> + <strong>Tailwind CSS</strong>. This is like the face of the app — the part users interact with.
+        <br><br>Files: <span class="file">app/page.tsx</span> <span class="file">app/components/*</span> <span class="file">app/globals.css</span>
+      </div>
+    </div>
+    <div class="arch-card">
+      <div class="card-title"><div class="dot" style="background:#fbbf24"></div> Backend (The Brain)</div>
+      <div class="card-body">
+        Handles the smart work: calling AI services, processing data. The frontend sends requests here, and the backend talks to Deepgram and Claude on your behalf.
+        <br><br>Files: <span class="file">app/api/translate/route.ts</span> <span class="file">app/api/summary/route.ts</span> <span class="file">app/api/deepgram/route.ts</span>
+      </div>
+    </div>
+    <div class="arch-card">
+      <div class="card-title"><div class="dot" style="background:#34d399"></div> Storage (The Memory)</div>
+      <div class="card-body">
+        Saves your meeting data, bookmarks, glossary, and settings so they survive page refreshes. Uses <strong>localStorage</strong> — a simple storage built into your browser.
+        <br><br>Files: <span class="file">app/lib/storage.ts</span> <span class="file">app/types.ts</span>
+      </div>
+    </div>
+    <div class="arch-card">
+      <div class="card-title"><div class="dot" style="background:#a78bfa"></div> External AI Services</div>
+      <div class="card-body">
+        The app doesn't do AI itself — it asks two cloud services:<br>
+        <strong>Deepgram Nova-2</strong> — listens to audio, returns Korean text<br>
+        <strong>Claude Haiku</strong> — reads Korean text, returns translation<br>
+        Both need API keys (passwords) stored in <span class="file">.env.local</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ALL PAGES ============ -->
+  <h2>The 6 Pages</h2>
+  <p>Each page is a separate screen in the app:</p>
+
+  <div class="page-map">
+    <div class="page-card">
+      <div class="page-icon">&#127908;</div>
+      <div class="page-name">Meeting</div>
+      <div class="page-path">/</div>
+      <div class="page-desc">The main screen. Start recording, see live translations, add bookmarks.</div>
+    </div>
+    <div class="page-card">
+      <div class="page-icon">&#128220;</div>
+      <div class="page-name">Transcript</div>
+      <div class="page-path">/transcript</div>
+      <div class="page-desc">Full record of everything said, with timestamps and both languages side by side.</div>
+    </div>
+    <div class="page-card">
+      <div class="page-icon">&#11088;</div>
+      <div class="page-name">Bookmarks</div>
+      <div class="page-path">/bookmarks</div>
+      <div class="page-desc">Important moments you marked during the meeting. Filter by type.</div>
+    </div>
+    <div class="page-card">
+      <div class="page-icon">&#128202;</div>
+      <div class="page-name">Summary</div>
+      <div class="page-path">/summary</div>
+      <div class="page-desc">AI-generated summary: key points, decisions, action items.</div>
+    </div>
+    <div class="page-card">
+      <div class="page-icon">&#128218;</div>
+      <div class="page-name">Glossary</div>
+      <div class="page-path">/glossary</div>
+      <div class="page-desc">Your custom dictionary. Add terms so the AI translates them correctly.</div>
+    </div>
+    <div class="page-card">
+      <div class="page-icon">&#9881;&#65039;</div>
+      <div class="page-name">Settings</div>
+      <div class="page-path">/settings</div>
+      <div class="page-desc">Choose language, font size, dark/light theme.</div>
+    </div>
+  </div>
+
+  <!-- ============ DATA FLOW ============ -->
+  <h2>What Happens When You Record</h2>
+  <p>Step-by-step, here's what the app does when you press "Start Recording":</p>
+
+  <div class="data-flow">
+    <div class="data-row">
+      <div class="data-num" style="background:#ef4444;color:white">1</div>
+      <div class="data-text"><strong>Get microphone access</strong> — Browser asks "Can this site use your microphone?" You say yes.</div>
+    </div>
+    <div class="data-row">
+      <div class="data-num" style="background:#f97316;color:white">2</div>
+      <div class="data-text"><strong>Get Deepgram key</strong> — App asks our server for the AI password. Server returns it (never exposed in the webpage code).</div>
+    </div>
+    <div class="data-row">
+      <div class="data-num" style="background:#eab308;color:white">3</div>
+      <div class="data-text"><strong>Open live connection</strong> — App opens a WebSocket (a persistent phone line) to Deepgram's servers.</div>
+    </div>
+    <div class="data-row">
+      <div class="data-num" style="background:#22c55e;color:white">4</div>
+      <div class="data-text"><strong>Stream audio</strong> — Every 250ms (4 times per second), a small chunk of audio is sent to Deepgram.</div>
+    </div>
+    <div class="data-row">
+      <div class="data-num" style="background:#3b82f6;color:white">5</div>
+      <div class="data-text"><strong>Receive Korean text</strong> — Deepgram sends back what it heard. First as a guess (interim), then as confirmed text (final).</div>
+    </div>
+    <div class="data-row">
+      <div class="data-num" style="background:#8b5cf6;color:white">6</div>
+      <div class="data-text"><strong>Buffer short fragments</strong> — If the text is too short (< 4 chars), wait for more. This avoids translating single syllables.</div>
+    </div>
+    <div class="data-row">
+      <div class="data-num" style="background:#ec4899;color:white">7</div>
+      <div class="data-text"><strong>Translate</strong> — Send the Korean text + glossary to our server, which calls Claude AI to translate it.</div>
+    </div>
+    <div class="data-row">
+      <div class="data-num" style="background:#6366f1;color:white">8</div>
+      <div class="data-text"><strong>Display</strong> — Translation appears on screen. Auto-scrolls. Saved to localStorage so it survives page refresh.</div>
+    </div>
+  </div>
+
+  <!-- ============ TECH STACK ============ -->
+  <h2>Tech Stack</h2>
+  <p>The tools used to build this app:</p>
+  <div class="tech-row">
+    <div class="tech-tag"><strong>Next.js 14</strong> — The framework (skeleton of the app)</div>
+    <div class="tech-tag"><strong>React</strong> — Makes the UI interactive</div>
+    <div class="tech-tag"><strong>TypeScript</strong> — JavaScript with safety checks</div>
+    <div class="tech-tag"><strong>Tailwind CSS</strong> — Styling with utility classes</div>
+    <div class="tech-tag"><strong>Deepgram Nova-2</strong> — Speech-to-text AI</div>
+    <div class="tech-tag"><strong>Claude Haiku</strong> — Translation AI</div>
+    <div class="tech-tag"><strong>localStorage</strong> — Browser-based storage</div>
+    <div class="tech-tag"><strong>WebSocket</strong> — Real-time audio streaming</div>
+  </div>
+
+  <!-- ============ FILE MAP ============ -->
+  <h2>File Map</h2>
+  <p>How the 25 files are organized:</p>
+  <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin:20px 0;font-family:monospace;font-size:0.82em;color:#888;line-height:2">
+    <span style="color:#eee">app/</span><br>
+    &nbsp;&nbsp;<span style="color:#fbbf24">api/</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;translate/route.ts <span style="color:#555">— Korean → Chinese/English</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;summary/route.ts &nbsp;<span style="color:#555">— Generate meeting summary</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;deepgram/route.ts &nbsp;<span style="color:#555">— Provide ASR API key</span><br>
+    &nbsp;&nbsp;<span style="color:#60a5fa">components/</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;NavHeader.tsx &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#555">— Top navigation bar</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;BookmarkFAB.tsx &nbsp;&nbsp;<span style="color:#555">— Floating bookmark buttons</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;BookmarkBadge.tsx &nbsp;<span style="color:#555">— Bookmark icon</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;SummaryCard.tsx &nbsp;&nbsp;<span style="color:#555">— Summary section card</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;ThemeProvider.tsx &nbsp;<span style="color:#555">— Dark/light mode</span><br>
+    &nbsp;&nbsp;<span style="color:#34d399">lib/</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;storage.ts &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#555">— Save/load from localStorage</span><br>
+    &nbsp;&nbsp;<span style="color:#a78bfa">pages (6)</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;page.tsx &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#555">— Meeting (main page)</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;transcript/page &nbsp;&nbsp;<span style="color:#555">— Full transcript</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;bookmarks/page &nbsp;&nbsp;&nbsp;<span style="color:#555">— Bookmarks list</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;summary/page &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#555">— AI summary</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;glossary/page &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#555">— Term dictionary</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;settings/page &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#555">— User preferences</span><br>
+    &nbsp;&nbsp;types.ts &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#555">— Data type definitions</span><br>
+    &nbsp;&nbsp;globals.css &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#555">— Theme colors, animations</span><br>
+    &nbsp;&nbsp;layout.tsx &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#555">— Root wrapper</span><br>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ============ LESSONS ============ -->
+  <h2>Lessons Learned & What To Do Better Next Time</h2>
+
+  <div class="lesson-grid">
+    <div class="lesson">
+      <div class="lesson-label bad">Problem: Started with wrong ASR</div>
+      <p>We first used Web Speech API (free, built into Chrome) but it had poor Korean accuracy and clipped the start of sentences. We had to migrate to Deepgram mid-project.</p>
+    </div>
+    <div class="lesson">
+      <div class="lesson-label good">Next time: Research ASR options first</div>
+      <p>Before writing code, test 2-3 speech recognition services with Korean audio samples. Pick the best one from the start instead of migrating later.</p>
+    </div>
+
+    <div class="lesson">
+      <div class="lesson-label bad">Problem: API key issues wasted time</div>
+      <p>We spent debugging time on invalid API keys, stale build caches, and wrong environment configs. These aren't code bugs — they're setup issues.</p>
+    </div>
+    <div class="lesson">
+      <div class="lesson-label good">Next time: Verify API keys first</div>
+      <p>Before writing any feature code, create a simple test script that confirms each API key works. Add clear error messages when keys are missing.</p>
+    </div>
+
+    <div class="lesson">
+      <div class="lesson-label bad">Problem: No database</div>
+      <p>All data lives in localStorage — if you clear browser data, everything is gone. No way to share meetings between devices or with other people.</p>
+    </div>
+    <div class="lesson">
+      <div class="lesson-label good">Next time: Add a real database early</div>
+      <p>Use Supabase or Firebase from the start. This enables user accounts, cross-device sync, and meeting sharing — features that are hard to bolt on later.</p>
+    </div>
+
+    <div class="lesson">
+      <div class="lesson-label bad">Problem: Large files burn AI tokens</div>
+      <p>page.tsx grew to 470+ lines. Every time the AI assistant needed to read it, it consumed a lot of usage quota. This adds up fast.</p>
+    </div>
+    <div class="lesson">
+      <div class="lesson-label good">Next time: Split early, create CLAUDE.md early</div>
+      <p>Break large files into smaller modules from the start. Create a CLAUDE.md project map on day one so the AI only reads what it needs.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <h2>Summary</h2>
+  <p style="font-size:1.05em;color:#ccc;line-height:1.8">
+    KMAT is a <strong>real-time Korean meeting translator</strong> built with Next.js. It captures your voice with <strong>Deepgram</strong>, translates it with <strong>Claude AI</strong>, and displays everything live on screen. It has 6 pages, 3 API routes, and stores everything in your browser's localStorage. The whole project is about <strong>2,000 lines of code</strong> across 25 files.
+  </p>
+
+</div>
+</body>
+</html>
